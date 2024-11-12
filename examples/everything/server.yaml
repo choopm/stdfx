@@ -1,0 +1,15 @@
+log:
+  format: color
+  level: info
+  output: stdout
+  timeFormat: "2006-01-02T15:04:05Z07:00"
+
+webserver:
+  host: 0.0.0.0
+  port: 8080
+
+routes:
+- path: /
+  content: hello world
+- path: /example
+  content: another example

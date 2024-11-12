@@ -1,0 +1,13 @@
+services:
+  workspace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/choopm/stdfx-devcontainer
+    init: true
+    volumes:
+      - ../:/workspace:delegated
+    working_dir: /workspace
+    command: sleep infinity
+    extra_hosts:
+      - host.docker.internal:host-gateway

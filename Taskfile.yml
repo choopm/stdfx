@@ -1,0 +1,75 @@
+version: '3'
+
+set: [pipefail] # exit if any pipe component fails
+shopt: [globstar] # support double star glob paths: **/*.go
+
+# include env vars
+dotenv: ['.env']
+
+# include other taskfiles
+includes:
+  everything:
+    taskfile: ./examples/everything/Taskfile.yml
+    dir: ./examples/everything
+
+tasks:
+  ## upgrade dependencies
+  upgrade:
+    desc: Upgrades golang dependencies
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+      - task: everything:upgrade
+
+  # static tests
+
+  ## unit testing
+  test:
+    desc: Unit testing of go code
+    cmds:
+      - go test -race -cover ./...
+
+  ## code linting
+  lint:
+    desc: Lints golang
+    cmds:
+      - golangci-lint version || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - golangci-lint run ./...
+
+  # CI tests
+
+  ## unit testing with coverage
+  cover:
+    desc: "CI: runs golang unit and coverage testing"
+    cmds:
+      - go test -race -coverprofile=/tmp/coverage.out ./...
+      - go tool cover -html=/tmp/coverage.out -o /tmp/coverage.html
+      - go tool cover -func=/tmp/coverage.out | tee /tmp/coverage.txt
+
+  ## update licenses
+  licenses:
+    desc: Generates license tree
+    cmds:
+      - go-licenses --help 2>/dev/null || go install github.com/google/go-licenses@latest
+      - rm -rf LICENSES
+      - go-licenses save --save_path LICENSES ./...
+      - go-licenses report ./... > LICENSES/licenses.csv
+
+  # setups your environment
+  envsetup:
+    desc: "Setups your environment, run on post-attach"
+    deps: [gomoddownload]
+  ## runs go mod download
+  gomoddownload:
+    internal: true
+    cmds:
+      - cmd: go mod download
+        ignore_error: true
+  ## install choopm dotfiles
+  dotfiles:
+    desc: Clone and install choopm dotfiles
+    status:
+      - test -d ~/.config/home-manager
+    cmds:
+      - git clone --depth 1 https://github.com/choopm/dotfiles.git ~/.config/home-manager
+      - make -C ~/.config/home-manager

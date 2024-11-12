@@ -1,0 +1,44 @@
+version: '3'
+
+env:
+  BIN: '{{ .BIN | default "everything" }}'
+
+tasks:
+  # builds binary
+  build:
+    desc: Builds the everything binary
+    env:
+      GOOS: '{{ .GOOS | default "" }}'
+      GOARCH: '{{ .GOARCH | default "" }}'
+      LD_FLAGS: '{{ .LD_FLAGS | default "-s -w" }}'
+      CGO_ENABLED: '{{ .CGO_ENABLED | default "0" }}'
+    cmds:
+      - |
+        export VERSION=$(git describe --tags --dirty --always 2>/dev/null || echo "unknown")
+        echo -e "VERSION=${VERSION}\nGOOS=${GOOS}\nGOARCH=${GOARCH}\nLD_FLAGS=${LD_FLAGS}\nCGO_ENABLED=${CGO_ENABLED}\nBIN=${BIN}"
+        go build -ldflags="${LD_FLAGS} -X main.version=${VERSION}" -o ${BIN}
+
+  # generates completion
+  completion:
+    desc: Generates shell completions (binary must be built before)
+    preconditions:
+      - sh: test -f ${BIN}
+        msg: Missing binary "${BIN}", make sure it is built before
+    cmds:
+      - echo -e "BIN=${BIN}"
+      - ./${BIN} completion bash > ${BIN}.bash
+      - ./${BIN} completion zsh > ${BIN}.zsh
+      - ./${BIN} completion fish > ${BIN}.fish
+      - ./${BIN} completion powershell > ${BIN}.powershell
+
+  # cleanup
+  clean:
+    internal: true
+    desc: Cleanup of build files
+    cmds:
+      - echo -e "BIN=${BIN}"
+      - rm -f ${BIN}
+      - rm -f ${BIN}.bash
+      - rm -f ${BIN}.zsh
+      - rm -f ${BIN}.fish
+      - rm -f ${BIN}.powershell

@@ -1,0 +1,40 @@
+{
+	"name": "stdfx",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "workspace",
+	"workspaceFolder": "/workspace",
+	"remoteUser": "ubuntu",
+	"containerUser": "ubuntu",
+	"postAttachCommand": "task envsetup",
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"configureZshAsDefaultShell": true,
+			"installOhMyZsh": true,
+			"upgradePackages": true,
+			"username": "ubuntu",
+			"uid": "1000",
+			"gid": "1000"
+		},
+		"ghcr.io/devcontainers/features/git:1": {
+			"version": "os-provided"
+		},
+		"ghcr.io/devcontainers/features/go:1": {
+			"version": "1.23"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"go.toolsManagement.checkForUpdates": "local",
+				"go.useLanguageServer": true,
+				"go.gopath": "/go"
+			},
+			"extensions": [
+				"golang.go",
+				"davidanson.vscode-markdownlint",
+				"stkb.rewrap",
+				"task.vscode-task"
+			]
+		}
+	}
+}
