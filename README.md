@@ -19,7 +19,7 @@ By using stdfx as an application starter you benefit from:
 - builtin cobra subcommands like config or version
 - configurable structured logging
 
-See [examples/everything](./examples/everything/) to test and experience it in action.
+See [examples/webserver](./examples/webserver/) to test and experience it in action.
 
 ### Usage example
 

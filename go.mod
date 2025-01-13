@@ -2,16 +2,13 @@ module github.com/choopm/stdfx
 
 go 1.23
 
-replace github.com/choopm/stdfx/examples/everything => ./examples/everything
-
 require (
-	github.com/choopm/stdfx/examples/everything v0.0.0
 	github.com/creasty/defaults v1.8.0
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/rs/zerolog v1.33.0
-	github.com/samber/slog-zap/v2 v2.6.1
-	github.com/samber/slog-zerolog/v2 v2.7.2
+	github.com/samber/slog-zap/v2 v2.6.2
+	github.com/samber/slog-zerolog/v2 v2.7.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.20.0-alpha.6
@@ -27,7 +24,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

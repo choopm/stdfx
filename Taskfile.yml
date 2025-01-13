@@ -8,9 +8,9 @@ dotenv: ['.env']
 
 # include other taskfiles
 includes:
-  everything:
-    taskfile: ./examples/everything/Taskfile.yml
-    dir: ./examples/everything
+  webserver:
+    taskfile: ./examples/webserver/Taskfile.yml
+    dir: ./examples/webserver
 
 tasks:
   ## upgrade dependencies
@@ -19,7 +19,7 @@ tasks:
     cmds:
       - go get -u ./...
       - go mod tidy
-      - task: everything:upgrade
+      - task: webserver:upgrade
 
   # static tests
 

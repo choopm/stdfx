@@ -1,2 +1,2 @@
 .task
-examples/everything/cmd/everything/everything
+examples/webserver/cmd/webserver/webserver
