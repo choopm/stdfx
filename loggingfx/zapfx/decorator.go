@@ -24,20 +24,29 @@ import (
 
 // Decorator is a fx.Decorate constructor to decorate logger to use
 // settings found in config for all configs implementing [ConfigWithLogging].
+//
+// The decorator will silently discard any errors since it is only decorating:
+// A user could run version command without providing a valid config path.
+// In such a case config file parsing would fail hence why errors are ignored.
 func Decorator[T any](
 	configProvider configfx.Provider[T],
 	logger *zap.Logger,
 ) (*zap.Logger, error) {
 	cfg, err := configProvider.Config()
 	if err != nil {
-		return nil, err
+		return logger, nil
 	}
 
 	// check if cfg implements ConfigWithLogging
 	if ctype, ok := any(cfg).(loggingfx.ConfigWithLogging); ok {
 		// cfg implements ConfigWithLogging and therefore
 		// has a custom func LoggingConfig(), use it to decorate:
-		return New(ctype.LoggingConfig())
+		log, err := New(ctype.LoggingConfig())
+		if err != nil {
+			return logger, nil
+		}
+
+		return log, nil
 	}
 
 	// not implementing, so return as it is
