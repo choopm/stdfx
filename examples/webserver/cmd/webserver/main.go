@@ -23,7 +23,6 @@ import (
 	"github.com/choopm/stdfx/configfx"
 	"github.com/choopm/stdfx/examples/webserver"
 	"github.com/choopm/stdfx/loggingfx/zerologfx"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
@@ -58,7 +57,6 @@ func main() {
 // serverCommand returns a *cobra.Command to start the server from a ConfigProvider
 func serverCommand(
 	configProvider configfx.Provider[webserver.Config],
-	logger *zerolog.Logger,
 ) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
@@ -66,6 +64,12 @@ func serverCommand(
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// fetch the config
 			cfg, err := configProvider.Config()
+			if err != nil {
+				return err
+			}
+
+			// rebuild logger
+			logger, err := zerologfx.New(cfg.Logging)
 			if err != nil {
 				return err
 			}

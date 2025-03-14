@@ -68,7 +68,6 @@ func main() {
 // yourCobraCommand returns a *cobra.Command to start the server from a ConfigProvider
 func yourCobraCommand(
 	configProvider configfx.Provider[yourapp.Config],
-	logger *zerolog.Logger,
 ) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
@@ -76,6 +75,12 @@ func yourCobraCommand(
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// fetch the config
 			cfg, err := configProvider.Config()
+			if err != nil {
+				return err
+			}
+
+			// rebuild logger
+			logger, err := zerologfx.New(cfg.Logging)
 			if err != nil {
 				return err
 			}

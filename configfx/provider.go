@@ -90,6 +90,7 @@ func (s *providerImpl[T]) Config() (*T, error) {
 
 	// let viper read the config from source
 	if err := v.ReadInConfig(); err != nil {
+		s.releaseViper()
 		return nil, fmt.Errorf("read config: %s", err)
 	}
 
@@ -99,10 +100,21 @@ func (s *providerImpl[T]) Config() (*T, error) {
 		mapstructure.ComposeDecodeHookFunc(decoders...),
 	))
 	if err != nil {
+		s.releaseViper()
 		return nil, fmt.Errorf("unmarshal config: %s", err)
 	}
 
 	return t, nil
+}
+
+// releaseViper should be called when viper needs to be freed after errors.
+// This might be the case for any decorator attempt on reading the config,
+// thus blocking future parsing attempts after e.g. cobra flags have been read.
+func (s *providerImpl[T]) releaseViper() {
+	s.viperMutex.Lock()
+	defer s.viperMutex.Unlock()
+
+	s.viper = nil
 }
 
 // Viper returns the viper instance.
