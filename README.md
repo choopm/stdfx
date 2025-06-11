@@ -35,6 +35,7 @@ import (
 	"github.com/choopm/stdfx/configfx"
 	"github.com/choopm/stdfx/loggingfx/zerologfx"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -79,11 +80,12 @@ func yourCobraCommand(
 				return err
 			}
 
-			// rebuild logger
+			// rebuild logger and make it global
 			logger, err := zerologfx.New(cfg.Logging)
 			if err != nil {
 				return err
 			}
+			log.Logger = *logger
 
 			// create server instance
 			server, err := yourapp.NewServer(cfg, logger)

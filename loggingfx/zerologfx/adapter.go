@@ -58,25 +58,8 @@ func New(config loggingfx.Config) (*zerolog.Logger, error) {
 	}
 
 	// parse level
-	zlevel := zerolog.InfoLevel // nolint:ineffassign
-	switch config.Level {
-	case "disabled":
-		zlevel = zerolog.Disabled
-	case "trace":
-		zlevel = zerolog.TraceLevel
-	case "debug":
-		zlevel = zerolog.DebugLevel
-	case "info":
-		zlevel = zerolog.InfoLevel
-	case "warn":
-		zlevel = zerolog.WarnLevel
-	case "error":
-		zlevel = zerolog.ErrorLevel
-	case "fatal":
-		zlevel = zerolog.FatalLevel
-	case "panic":
-		zlevel = zerolog.PanicLevel
-	default:
+	zlevel, err := zerolog.ParseLevel(config.Level)
+	if err != nil {
 		return nil, fmt.Errorf("unknown log.level: %s", config.Level)
 	}
 
