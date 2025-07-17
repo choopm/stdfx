@@ -30,7 +30,7 @@ import (
 // Provider defines an interface for abstract config providers
 type Provider[T any] interface {
 	// Config shall return the generic config or error
-	Config() (*T, error)
+	Config(opts ...ConfigOption) (*T, error)
 	// Viper shall return the viper instance
 	Viper() *viper.Viper
 }
@@ -42,6 +42,8 @@ type providerImpl[T any] struct {
 
 	viper      *viper.Viper
 	viperMutex sync.Mutex
+
+	viperWatchOnce sync.Once
 }
 
 // ensure providerImpl[T] implements Provider[T]
@@ -64,7 +66,13 @@ func NewProvider[T any](
 // Config decoding can be tuned by implementing [CustomConfigDecoder].
 // Internally it requests a Viper instance from the ConfigSource[T]
 // to then unmarshall it onto *T using mapstructure and default tags.
-func (s *providerImpl[T]) Config() (*T, error) {
+func (s *providerImpl[T]) Config(opts ...ConfigOption) (*T, error) {
+	// apply any given opts
+	cOpts := defaultConfigOptions()
+	for _, option := range opts {
+		option(cOpts)
+	}
+
 	// create fresh generic config
 	t := new(T)
 
@@ -87,11 +95,28 @@ func (s *providerImpl[T]) Config() (*T, error) {
 
 	// get viper instance
 	v := s.Viper()
+	if cOpts.onConfigChange != nil {
+		v.OnConfigChange(cOpts.onConfigChange)
+		s.viperWatchOnce.Do(v.WatchConfig)
+	}
 
-	// let viper read the config from source
-	if err := v.ReadInConfig(); err != nil {
-		s.releaseViper()
-		return nil, fmt.Errorf("read config: %s", err)
+	if cOpts.readInConfig {
+		// let viper read the config from source
+		if err := v.ReadInConfig(); err != nil {
+			s.releaseViper()
+			return nil, fmt.Errorf("read config: %s", err)
+		}
+	}
+
+	// apply any overlays
+	for _, overlay := range cOpts.overlays {
+		if err := overlay.applyTo(v, t); err != nil {
+			return nil, fmt.Errorf("apply overlay: %s", err)
+		}
+		if cOpts.onConfigChange != nil {
+			overlay.viper.OnConfigChange(cOpts.onConfigChange)
+			overlay.viperWatchOnce.Do(overlay.viper.WatchConfig)
+		}
 	}
 
 	// decode config using viper and struct tags `mapstructure:""`
