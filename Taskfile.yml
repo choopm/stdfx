@@ -65,11 +65,3 @@ tasks:
     cmds:
       - cmd: go mod download
         ignore_error: true
-  ## install choopm dotfiles
-  dotfiles:
-    desc: Clone and install choopm dotfiles
-    status:
-      - test -d ~/.config/home-manager
-    cmds:
-      - git clone --depth 1 https://github.com/choopm/dotfiles.git ~/.config/home-manager
-      - make -C ~/.config/home-manager
