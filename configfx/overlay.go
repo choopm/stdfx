@@ -63,9 +63,25 @@ func (s *Overlay) applyTo(vip *viper.Viper, cfg any) error {
 	}
 
 	// retrieve the from key
-	from, ok := s.viper.AllSettings()[s.From]
-	if !ok {
-		return fmt.Errorf("referenced from field %q not found in overlay", s.From)
+	fromPath := strings.Split(s.From, ".")
+	fromSlice := s.viper.AllSettings()
+	var from any
+	for _, elem := range fromPath {
+		// retrieve path element
+		var ok bool
+		from, ok = fromSlice[elem]
+		if !ok {
+			return fmt.Errorf("referenced from field %q in path %q not found in overlay %q", elem, s.From, s.Filename)
+		}
+
+		// check if it is a map for next iter
+		if cast, ok := from.(map[string]any); ok {
+			fromSlice = cast
+		}
+	}
+	// sanity check
+	if from == nil {
+		return fmt.Errorf("referenced from path %q is nil in overlay %q", s.From, s.Filename)
 	}
 
 	for _, path := range s.To {

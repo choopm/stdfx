@@ -4,12 +4,14 @@ log:
   output: stdout
   timeFormat: "2006-01-02T15:04:05Z07:00"
 
+config:
+  hot-reload: true # detect config file changes without restarts
+  overlays:
+  - filename: routes.yaml
+    # load YAML path 'example.routes' from routes.yaml into path 'routes'
+    from: example.routes
+    to: [routes]
+
 webserver:
   host: 0.0.0.0
   port: 8080
-
-routes:
-- path: /
-  content: hello world
-- path: /example
-  content: another example

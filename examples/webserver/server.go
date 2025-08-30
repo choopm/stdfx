@@ -32,6 +32,7 @@ import (
 type Server struct {
 	config *Config
 	log    *zerolog.Logger
+	mux    *http.ServeMux
 }
 
 // NewServer creates a new *Server instance using a provided config
@@ -53,6 +54,7 @@ func NewServer(config *Config, logger *zerolog.Logger) (*Server, error) {
 	s := &Server{
 		config: config,
 		log:    logger,
+		mux:    http.NewServeMux(),
 	}
 
 	return s, nil
@@ -64,11 +66,8 @@ func (s *Server) Start(ctx context.Context) error {
 		Interface("config", s.config).
 		Msg("initializing server")
 
-	// register routes
-	for _, route := range s.config.Routes {
-		http.HandleFunc(route.Path, func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, route.Content)
-		})
+	if err := s.Reconfigure(s.config); err != nil {
+		return err
 	}
 
 	s.log.Trace().
@@ -79,7 +78,7 @@ func (s *Server) Start(ctx context.Context) error {
 	addr := net.JoinHostPort(s.config.Webserver.Host,
 		strconv.Itoa(s.config.Webserver.Port),
 	)
-	server := &http.Server{Addr: addr, Handler: nil}
+	server := &http.Server{Addr: addr, Handler: s}
 	// shutdown hook, registered before starting
 	context.AfterFunc(ctx, func() {
 		_ = server.Close()
@@ -104,4 +103,26 @@ func (s *Server) Start(ctx context.Context) error {
 	s.log.Info().Msg("server stopped")
 
 	return nil
+}
+
+// Reconfigure restarts the server using a new config or error
+func (s *Server) Reconfigure(cfg *Config) error {
+	mux := http.NewServeMux()
+
+	// register routes
+	for _, route := range s.config.Routes {
+		mux.HandleFunc(route.Path, func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, route.Content)
+		})
+	}
+
+	// replace server mux
+	s.mux = mux
+
+	return nil
+}
+
+// ServeHTTP implements http.Handler
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.mux.ServeHTTP(w, r)
 }

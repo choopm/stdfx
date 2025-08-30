@@ -44,11 +44,15 @@ func DefaultEnvironmentPrefix(configName string) string {
 // - $HOME/.config/
 // - $HOME/.<configName>/
 // - $HOME/.local/etc/
+// - $HOME/.local/etc/<configName>/
 // - $HOME/
 // - /opt/<configName>/
 // - /opt/<configName>/etc/
+// - /opt/<configName>/etc/<configName>/
 // - /usr/local/etc/
+// - /usr/local/etc/<configName>/
 // - /etc/
+// - /etc/<configName>/
 func DefaultFileSearchPaths(configName string) []string {
 	// working dir
 	paths := []string{
@@ -61,6 +65,7 @@ func DefaultFileSearchPaths(configName string) []string {
 			filepath.Join(home, ".config", configName),
 			filepath.Join(home, "."+configName),
 			filepath.Join(home, ".local/etc"),
+			filepath.Join(home, ".local/etc", configName),
 			home,
 		}...)
 	}
@@ -69,8 +74,11 @@ func DefaultFileSearchPaths(configName string) []string {
 	paths = append(paths, []string{
 		filepath.Join("/opt", configName),
 		filepath.Join("/opt", configName, "etc"),
+		filepath.Join("/opt", configName, "etc", configName),
 		"/usr/local/etc",
+		filepath.Join("/usr/local/etc", configName),
 		"/etc",
+		filepath.Join("/etc", configName),
 	}...)
 
 	return paths

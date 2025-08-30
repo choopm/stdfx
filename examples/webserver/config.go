@@ -19,6 +19,7 @@ package webserver
 import (
 	"fmt"
 
+	"github.com/choopm/stdfx/configfx"
 	"github.com/choopm/stdfx/loggingfx"
 	"github.com/go-viper/mapstructure/v2"
 )
@@ -27,11 +28,19 @@ import (
 type Config struct {
 	Logging loggingfx.Config `mapstructure:"log"`
 
+	Config ConfigConfig `mapstructure:"config"`
+
 	// Webserver defines the http server config
 	Webserver WebserverConfig `mapstructure:"webserver"`
 
 	// Routes defines the webserver routes
 	Routes []*Route `mapstructure:"routes" default:"[]"`
+}
+
+// ConfigConfig struct stores all config options
+type ConfigConfig struct {
+	HotReload bool                `mapstructure:"hot-reload" default:"false"`
+	Overlays  []*configfx.Overlay `mapstructure:"overlays" default:"[]"`
 }
 
 // Validate validates the Config

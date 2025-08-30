@@ -1,0 +1,6 @@
+example:
+  routes:
+  - path: /
+    content: hello world
+  - path: /example
+    content: another example

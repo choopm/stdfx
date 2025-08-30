@@ -21,9 +21,11 @@ By using stdfx as an application starter you benefit from:
 
 See [examples/webserver](./examples/webserver/) to test and experience it in action.
 
+It acts as a demo for every stdfx feature.
+
 ### Usage example
 
-A complete usage might look like this:
+A minimal usage might look like this:
 
 <!-- markdownlint-disable MD010 -->
 ```golang
