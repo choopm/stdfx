@@ -1,5 +1,5 @@
-github.com/choopm/stdfx v0.1.5 h1:J33UEDzJNIvBp78yTSLKtbJSAgn3eC0fPqEtBZhDsNA=
-github.com/choopm/stdfx v0.1.5/go.mod h1:vn+sNV5z+VQGL4eu22yoglNkxkF35EZ4yEsxMEtqrSI=
+github.com/choopm/stdfx v0.1.6 h1:bkLP9zBwMrGjA8qS5fB47v4uC4zChIyuo/MewnlzRew=
+github.com/choopm/stdfx v0.1.6/go.mod h1:rCjMqq8EaH/hprhKUMOaSOlDJkj2ISE5zqVIiB1Dnsc=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/creasty/defaults v1.8.0 h1:z27FJxCAa0JKt3utc0sCImAEb+spPucmKoOdLHvHYKk=
