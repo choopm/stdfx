@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.5
 
 require (
-	github.com/choopm/stdfx v0.1.6
+	github.com/choopm/stdfx v0.1.7
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/rs/zerolog v1.34.0
