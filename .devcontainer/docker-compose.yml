@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ghcr.io/choopm/stdfx-devcontainer:latest
     init: true
     volumes:
       - ../:/workspace:delegated
