@@ -31,11 +31,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// AppVersion is the version given to [VersionCommand]
+var AppVersion = "unknown"
+
 // VersionCommand a version *cobra.Command constructor to print version information.
 // Supply your build tag as version and it will add runtime and compiler details.
 func VersionCommand(version string) func(log *slog.Logger) *cobra.Command {
-	if len(version) == 0 {
-		version = "unknown"
+	if version != "" {
+		AppVersion = "unknown"
 	}
 
 	return func(log *slog.Logger) *cobra.Command {
@@ -51,7 +54,7 @@ func VersionCommand(version string) func(log *slog.Logger) *cobra.Command {
 					slog.String("go-version", runtime.Version()),
 					slog.String("go-os", runtime.GOOS),
 					slog.String("go-arch", runtime.GOARCH),
-					slog.String("version", version),
+					slog.String("version", AppVersion),
 				)
 			},
 		}
