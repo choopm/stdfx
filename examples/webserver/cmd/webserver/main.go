@@ -54,8 +54,9 @@ func main() {
 		),
 
 		// app start
-		fx.Invoke(stdfx.Unprivileged), // abort when being run as root
-		fx.Invoke(stdfx.Commander),    // run root cobra command
+		fx.Invoke(stdfx.ContainerEntrypoint("*")), // program is container entrypoint
+		fx.Invoke(stdfx.UnprivilegedWarn),         // warn when being run as root
+		fx.Invoke(stdfx.Commander),                // run root cobra command
 	).Run()
 }
 
