@@ -25,12 +25,10 @@ var ContainerEntrypointDefaultTools = []string{"sh", "/bin/sh", "bash", "/bin/ba
 //   - fx.Invoke(stdfx.ContainerEntrypoint("*"))
 //
 // Resulting container image invocations:
-//   - tools
-//     docker run --rm -it ghcr.io/choopm/myproject:latest sh -c 'echo hello world'
-//     docker run --rm -it ghcr.io/choopm/myproject:latest bash -i
-//     docker run --rm -it ghcr.io/choopm/myproject:latest whoami
-//   - selfaware:
-//     docker run --rm -it ghcr.io/choopm/myproject:latest myproject -c ...
+//   - docker run --rm -it ghcr.io/choopm/myproject:latest sh -c 'echo hello world'
+//   - docker run --rm -it ghcr.io/choopm/myproject:latest bash -i
+//   - docker run --rm -it ghcr.io/choopm/myproject:latest whoami
+//   - docker run --rm -it ghcr.io/choopm/myproject:latest myproject -c ...
 func ContainerEntrypoint(tools ...string) func() {
 	// use default tools if nothing was provided
 	if len(tools) == 0 {
