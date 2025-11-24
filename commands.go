@@ -38,7 +38,7 @@ var AppVersion = "unknown"
 // Supply your build tag as version and it will add runtime and compiler details.
 func VersionCommand(version string) func(log *slog.Logger) *cobra.Command {
 	if version != "" {
-		AppVersion = "unknown"
+		AppVersion = version
 	}
 
 	return func(log *slog.Logger) *cobra.Command {
