@@ -19,7 +19,7 @@
 			"version": "os-provided"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
-			"version": "1.25"
+			"version": "1.26"
 		}
 	},
 	"customizations": {

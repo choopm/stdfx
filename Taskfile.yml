@@ -20,6 +20,13 @@ tasks:
       - go get -u ./...
       - go mod tidy
       - task: webserver:upgrade
+      - task: upgrade-devcontainer
+
+  upgrade-devcontainer:
+    desc: Upgrades devcontainer features
+    cmds:
+      - which devcontainer || (curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sudo sh -s -- --prefix /usr)
+      - devcontainer upgrade
 
   # static tests
 
