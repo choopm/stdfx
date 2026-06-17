@@ -19,6 +19,7 @@ package stdfx
 import (
 	"fmt"
 	"reflect"
+	"runtime"
 )
 
 var _errType = reflect.TypeFor[error]()
@@ -30,6 +31,7 @@ var _errType = reflect.TypeFor[error]()
 // calling func - even if it was nil deferred calls to Defer might change this.
 // The argument index of error when returning does not matter.
 // All error arguments will be checked and appended if not nil.
+// Defer will panic if not given enough parameters to call fn.
 //
 // Simple usage example without parameters:
 //
@@ -60,17 +62,37 @@ var _errType = reflect.TypeFor[error]()
 //		// ...
 //	}
 func Defer(err *error, fn any, params ...any) {
-	// sanity check
 	f := reflect.ValueOf(fn)
-	if len(params) != f.Type().NumIn() {
-		// we can't invoke fn if lacking the required paramaters
-		panic("internal: invalid number of arguments for fn given to Defer")
+
+	// parameter counts
+	given, requires := len(params), f.Type().NumIn()
+	// variadic function?
+	isVariadic := f.Type().IsVariadic()
+
+	// check for parameters
+	if (!isVariadic && given != requires) ||
+		(isVariadic && given < requires-1) {
+		// we can't invoke fn if lacking the required parameters
+		panic(fmt.Sprintf("wrong number of parameters for %q: requires %d but given %d",
+			runtime.FuncForPC(f.Pointer()).Name(),
+			f.Type().NumIn(),
+			len(params),
+		))
 	}
 
 	// build parameters
 	in := make([]reflect.Value, len(params))
 	for i, param := range params {
-		in[i] = reflect.ValueOf(param)
+		v := reflect.ValueOf(param)
+		if !v.IsValid() {
+			// param is nil, construct a zero value with variadic in mind:
+			if i < requires {
+				v = reflect.Zero(f.Type().In(i))
+			} else {
+				v = reflect.Zero(f.Type().In(requires - 1))
+			}
+		}
+		in[i] = v
 	}
 
 	// call fn, check all return arguments

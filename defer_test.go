@@ -18,6 +18,7 @@ package stdfx_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/choopm/stdfx"
@@ -37,7 +38,10 @@ func TestDefer(t *testing.T) {
 	fn3 := func(v string, _ bool) (string, error) {
 		return v, errors.New(v)
 	}
-	fn4 := func() (bool, error) {
+	fn4 := func(v ...string) error {
+		return errors.New(strings.Join(v, ""))
+	}
+	fn5 := func() (bool, error) {
 		return true, nil
 	}
 
@@ -52,11 +56,22 @@ func TestDefer(t *testing.T) {
 		assert.ErrorContains(t, err, "fn1")
 		assert.ErrorContains(t, err, "fn2")
 		assert.ErrorContains(t, err, "fn3")
-		assert.Equal(t, err.Error(), "fn1: fn2: fn3")
+		assert.ErrorContains(t, err, "fn4")
+		assert.Equal(t, "fn1: fn2: fn3: fn4: variadic", err.Error())
 	}()
 
+	// test different func signatures
 	defer stdfx.Defer(&err, fn1)
 	defer stdfx.Defer(&err, fn2, "fn2")
 	defer stdfx.Defer(&err, fn3, "fn3", true)
-	defer stdfx.Defer(&err, fn4)
+	defer stdfx.Defer(&err, fn4, "fn4: ", "v", "a", "r", "i", "a", "d", "i", "c")
+	defer stdfx.Defer(&err, fn5)
+
+	// test panics
+	defer func() {
+		r := recover()
+		assert.NotNil(t, r)
+		assert.Contains(t, r, "requires 0 but given 4")
+	}()
+	stdfx.Defer(&err, fn0, "wrong", "number", "of", "arguments")
 }
