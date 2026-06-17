@@ -3,7 +3,7 @@ module github.com/choopm/stdfx/examples/webserver
 go 1.26.0
 
 require (
-	github.com/choopm/stdfx v0.1.10
+	github.com/choopm/stdfx v0.1.11
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/rs/zerolog v1.35.1
