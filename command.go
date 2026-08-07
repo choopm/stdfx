@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"slices"
 	"time"
 
 	"github.com/choopm/stdfx/globals"
@@ -74,7 +76,7 @@ var AutoCommand = fx.Annotate(
 // It is up to the developer to provide meaningful subcommands.
 func newRootCommand(commands ...*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "",
+		Use:   os.Args[0],
 		Short: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -114,7 +116,6 @@ func Commander(
 	shutdowner fx.Shutdowner,
 	cmd *cobra.Command,
 ) {
-
 	// errgroup and ctx to start/stop the *cobra.Command
 	ctx := withShutdowner(context.Background(), shutdowner)
 	ctx, cancel := context.WithCancel(ctx)
@@ -124,7 +125,40 @@ func Commander(
 		OnStart: func(_ context.Context) error {
 			// start the *cobra.Command using the errgroup and its ctx
 			g.Go(func() error {
-				_, err := cmd.ExecuteContextC(ctx)
+				// check if program invocation name (os.Args[0]) is a subcommand:
+				// That subcommand should be run directly. Therefore we rebuild
+				// the args to fake that the user directly called that command.
+				//
+				// For example you can build an alternative to
+				//   `/usr/bin/program subcommand list things`
+				// by creating a symlink with a name of that subcommand and
+				// calling it intead:
+				//   ```shell
+				//   ln -s /usr/bin/program /usr/bin/subcommand
+				//   /usr/bin/subcommand list things
+				//   ```
+				if subCmd, _, err := cmd.Find(os.Args); err == nil {
+					arg0 := []string{}
+					for {
+						// collect the current subcmd name
+						arg0 = append(arg0, subCmd.Name())
+
+						parent := subCmd.Parent()
+						if parent == nil || parent == subCmd {
+							// end command chain traversal
+							break
+						}
+
+						// keep going upwards
+						subCmd = parent
+					}
+					// we are done; replace original args
+					slices.Reverse(arg0)
+					os.Args = append(arg0, os.Args[1:]...)
+				}
+
+				// invoke cobra (it will lookup the command to run)
+				err := cmd.ExecuteContext(ctx)
 				if err != nil && !errors.Is(err, context.Canceled) {
 					defer shutdowner.Shutdown(fx.ExitCode(1)) // nolint:errcheck
 					return fmt.Errorf("failed to run: %s", err)
