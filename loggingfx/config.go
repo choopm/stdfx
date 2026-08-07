@@ -40,7 +40,7 @@ type Config struct {
 
 	// Output is the logging sink to use, currently supported:
 	// "stdout", "stderr", "<filename>"
-	Output string `mapstructure:"output" default:"stdout"`
+	Output string `mapstructure:"output" default:"stderr"`
 
 	// Format is the logging encoding, currently supported:
 	// "text", "json"
