@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"time"
 
@@ -137,7 +138,8 @@ func Commander(
 				//   ln -s /usr/bin/program /usr/bin/subcommand
 				//   /usr/bin/subcommand list things
 				//   ```
-				if subCmd, _, err := cmd.Find(os.Args); err == nil {
+				aliasArgs := append([]string{filepath.Base(os.Args[0])}, os.Args[1:]...)
+				if subCmd, _, err := cmd.Find(aliasArgs); err == nil {
 					arg0 := []string{}
 					for {
 						// collect the current subcmd name
