@@ -1,5 +1,5 @@
-github.com/choopm/stdfx v0.2.2 h1:X0zK7dVAM7lYohdtii9U5sfOI7BpxezliuMCS82PbJk=
-github.com/choopm/stdfx v0.2.2/go.mod h1:QZL5sSAUcpvagwKCegvNG5DlGKPSYZiQxQGeGF79UBw=
+github.com/choopm/stdfx v0.3.0 h1:WZ1ap/17wSJKrmRUhpsWv+I7QUfXRXzf9IR43a39hAI=
+github.com/choopm/stdfx v0.3.0/go.mod h1:Lil0kg3eHzl3BryMwmg2S7cwgTyYkU0fH1YJtKxJaKI=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/creasty/defaults v1.11.0 h1:lZ8c5bHZGtyIeumdTPXKOKkHtNL+qQWVrGhNPGqeFww=
 github.com/creasty/defaults v1.11.0/go.mod h1:TGHvg4OCP/fVv+yotLzg97i5PKrF+iZSvg6Kmm7Y12Y=
@@ -21,7 +21,7 @@ github.com/go-openapi/jsonpointer v1.0.2 h1:NbW7xT2b+l7x+JefiPGDsZWsrLk1ogrz4AHK
 github.com/go-openapi/jsonpointer v1.0.2/go.mod h1:N0rI4MbNKD7xAFTiHtB+5Nhrg2j/wwYg7m7Fmb4/jk8=
 github.com/go-openapi/jsonreference v1.0.3 h1:5rDbq+JsjCv6/nUDDJt83nLZoADI4w03uvHXer+4aYQ=
 github.com/go-openapi/jsonreference v1.0.3/go.mod h1:OJSlMXHysgH272D9z2tiy2MGe5A9vQLHaCPb6KbYdE4=
-github.com/go-openapi/swag v0.28.0 h1:xkgbOSKj6DZziNpyqRRAOt3GJGtgjgsd2RoyT30VWuw=
+github.com/go-openapi/swag v0.27.1 h1:VotvOLWW8q/EAxB0YdsBBGC8XYyeL1YwBj2ungAGPNg=
 github.com/go-openapi/swag/conv v0.29.2 h1:8c9shoB8l0QRSR6ymq1llHdBWDqpIgJfjTGHx3Vuhm0=
 github.com/go-openapi/swag/conv v0.29.2/go.mod h1:AZS0YigTNf8qNtD6WqJz/N4RUNmpr76SyjFGkq4+p6Q=
 github.com/go-openapi/swag/jsonutils v0.29.2 h1:uZNSD2/rJDYAfvsLYkykTzXuyxM3QpDKV9jhRHrMu6k=

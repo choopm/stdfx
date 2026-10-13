@@ -3,7 +3,7 @@ module github.com/choopm/stdfx/examples/webserver
 go 1.27.0
 
 require (
-	github.com/choopm/stdfx v0.2.2
+	github.com/choopm/stdfx v0.3.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/rs/zerolog v1.35.1
@@ -21,7 +21,9 @@ require (
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-openapi/jsonpointer v1.0.2 // indirect
 	github.com/go-openapi/jsonreference v1.0.3 // indirect
-	github.com/go-openapi/swag/jsonutils v0.29.2 // indirect
+	github.com/go-openapi/swag/conv v0.29.2 // indirect
+	github.com/go-openapi/swag/pools v0.29.2 // indirect
+	github.com/go-openapi/swag/typeutils v0.29.2 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
