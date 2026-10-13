@@ -43,8 +43,12 @@ var Module = fx.Module(
 
 // New returns a new configured *zerolog.Logger
 func New(config loggingfx.Config) (*zerolog.Logger, error) {
-	// global options
-	zerolog.TimeFieldFormat = config.TimeFormat
+	// global options, an empty time format being RFC 3339 as documented
+	timeFormat := config.TimeFormat
+	if timeFormat == "" {
+		timeFormat = time.RFC3339
+	}
+	zerolog.TimeFieldFormat = timeFormat
 
 	// enable/disable coloring for known formats
 	noColor := false
@@ -76,7 +80,7 @@ func New(config loggingfx.Config) (*zerolog.Logger, error) {
 		fileOutput = true
 
 		var err error
-		output, err = os.OpenFile(config.Output, 0644, os.ModeAppend)
+		output, err = os.OpenFile(config.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return nil, fmt.Errorf("unable to open log.output: %s", err)
 		}
@@ -93,7 +97,7 @@ func New(config loggingfx.Config) (*zerolog.Logger, error) {
 		output = zerolog.ConsoleWriter{
 			Out:          output,
 			NoColor:      noColor,
-			TimeFormat:   config.TimeFormat,
+			TimeFormat:   timeFormat,
 			TimeLocation: time.Local, // you may overwrite location using env TZ
 		}
 	}

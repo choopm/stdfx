@@ -64,7 +64,7 @@ func New(config loggingfx.Config) (*slog.Logger, error) {
 	default:
 		// config.Output is a filename
 		var err error
-		output, err = os.OpenFile(config.Output, 0644, os.ModeAppend)
+		output, err = os.OpenFile(config.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return nil, fmt.Errorf("unable to open log.output: %s", err)
 		}

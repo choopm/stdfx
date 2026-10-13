@@ -32,22 +32,21 @@ type ConfigWithLogging interface {
 
 // Config defines a configuration for use with loggers
 type Config struct {
-	// Level must be supported by the selected log adapter, most support this:
-	// "debug", "info", "warn", "error"
-	// some include more level:
-	// "trace", "fatal"
+	// Level is the least severity logged: trace, debug, info, warn or error.
+	// Some log adapters know fatal and panic as well.
 	Level string `mapstructure:"level" default:"info"`
 
-	// Output is the logging sink to use, currently supported:
-	// "stdout", "stderr", "<filename>"
+	// Output is where the log is written: stdout, stderr or the name of a
+	// file.
 	Output string `mapstructure:"output" default:"stderr"`
 
-	// Format is the logging encoding, currently supported:
-	// "text", "json"
+	// Format is how a line is written: json for a log collector, text for a
+	// terminal, or color for a terminal with colors. A file is always written
+	// as json.
 	Format string `mapstructure:"format" default:"text"`
 
-	// FormatTime is the time encoding, all golang time formats are supported.
-	// Defaults to [time.RFC3339]
+	// TimeFormat is the layout of a timestamp as Go writes one, see the
+	// package time. Empty means RFC 3339.
 	TimeFormat string `mapstructure:"timeFormat" default:""`
 }
 
