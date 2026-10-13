@@ -17,8 +17,11 @@ limitations under the License.
 package configfx
 
 import (
+	"bytes"
 	"fmt"
 	"log/slog"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/choopm/stdfx/loggingfx/slogfx"
@@ -73,24 +76,11 @@ func (s *providerImpl[T]) Config(opts ...ConfigOption) (*T, error) {
 		option(cOpts)
 	}
 
-	// create fresh generic config
-	t := new(T)
-
-	// set default values by struct tags `default:""` on t
-	// viper will override what is present afterwards
+	// create fresh generic config with defaults
 	s.log.Debug("setting defaults")
-	if err := defaults.Set(t); err != nil {
-		return nil, fmt.Errorf("setting config defaults: %s", err)
-	}
-
-	// build default decoders
-	decoders := DefaultDecoders()
-	// check if T implements CustomDecoder
-	if ctype, ok := any(t).(CustomDecoder); ok {
-		// T implements CustomDecoder and therefore
-		// has a custom func DecodeHook(), use it:
-		s.log.Debug("found custom config DecodeHook()")
-		decoders = append(decoders, ctype.DecodeHook())
+	t, err := newConfig[T]()
+	if err != nil {
+		return nil, err
 	}
 
 	// get viper instance
@@ -121,15 +111,87 @@ func (s *providerImpl[T]) Config(opts ...ConfigOption) (*T, error) {
 
 	// decode config using viper and struct tags `mapstructure:""`
 	s.log.Debug("unmarshalling config using viper")
+	if err := unmarshal(v, t); err != nil {
+		s.releaseViper()
+		return nil, err
+	}
+
+	return t, nil
+}
+
+// Decode returns the config *T decoded from b or error.
+// It applies defaults, decoders and overlays as [Provider.Config] does, but it
+// never consults the environment: what it returns is what b says, which is what
+// an editor of the config file needs to validate before writing it.
+// path names the file b was read from, if any. Its extension selects the
+// format, yaml if it has none, and its directory is where overlays are found.
+// Of opts only overlays apply.
+func Decode[T any](path string, b []byte, opts ...ConfigOption) (*T, error) {
+	cOpts := defaultConfigOptions()
+	for _, option := range opts {
+		option(cOpts)
+	}
+
+	t, err := newConfig[T]()
+	if err != nil {
+		return nil, err
+	}
+
+	v := viper.New()
+	v.SetConfigType("yaml")
+	if path != "" {
+		v.SetConfigFile(path)
+		if ext := strings.TrimPrefix(filepath.Ext(path), "."); ext != "" {
+			v.SetConfigType(ext)
+		}
+	}
+	if err := v.ReadConfig(bytes.NewReader(b)); err != nil {
+		return nil, fmt.Errorf("read config: %w", err)
+	}
+
+	for _, overlay := range cOpts.overlays {
+		if err := overlay.applyTo(v, t); err != nil {
+			return nil, fmt.Errorf("apply overlay: %w", err)
+		}
+	}
+
+	if err := unmarshal(v, t); err != nil {
+		return nil, err
+	}
+
+	return t, nil
+}
+
+// newConfig returns a fresh *T with the defaults of its struct tags
+// `default:""` set, which a config file overrides afterwards, or error.
+func newConfig[T any]() (*T, error) {
+	t := new(T)
+	if err := defaults.Set(t); err != nil {
+		return nil, fmt.Errorf("setting config defaults: %s", err)
+	}
+
+	return t, nil
+}
+
+// unmarshal decodes what v read onto t using the struct tags
+// `mapstructure:""`, the [DefaultDecoders] and the DecodeHook of t if it is a
+// [CustomDecoder], or returns error.
+func unmarshal[T any](v *viper.Viper, t *T) error {
+	decoders := DefaultDecoders()
+	if ctype, ok := any(t).(CustomDecoder); ok {
+		// T implements CustomDecoder and therefore
+		// has a custom func DecodeHook(), use it:
+		decoders = append(decoders, ctype.DecodeHook())
+	}
+
 	err := v.Unmarshal(t, viper.DecodeHook(
 		mapstructure.ComposeDecodeHookFunc(decoders...),
 	))
 	if err != nil {
-		s.releaseViper()
-		return nil, fmt.Errorf("unmarshal config: %s", err)
+		return fmt.Errorf("unmarshal config: %s", err)
 	}
 
-	return t, nil
+	return nil
 }
 
 // releaseViper should be called when viper needs to be freed after errors.

@@ -28,13 +28,16 @@ import (
 
 // Overlay defines a configuration overlay
 type Overlay struct {
-	// Filename is the full filepath to the overlay config
+	// Filename is the file to read the value from. It is looked up next to
+	// the config file, then in the working directory, and its extension is
+	// ignored: any format the config file may have is read.
 	Filename string `mapstructure:"filename" default:""`
 
-	// From is the mapstructure path to the element which shall be used
+	// From is the dotted path of the value within that file.
 	From string `mapstructure:"from" default:""`
 
-	// To defines mapstructure paths where the [From] element gets injected
+	// To are the dotted paths of this config the value is written to. A list
+	// found there is replaced by the value.
 	To []string `mapstructure:"to" default:"[]"`
 
 	// viper is used internally to read and parse the overlay config file
