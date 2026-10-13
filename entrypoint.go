@@ -22,6 +22,9 @@ import (
 	"path/filepath"
 	"slices"
 	"syscall"
+
+	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 )
 
 // ContainerEntrypointDefaultTools are the default tools for [ContainerEntrypoint]
@@ -34,6 +37,10 @@ var ContainerEntrypointDefaultTools = []string{"sh", "/bin/sh", "bash", "/bin/ba
 // A special value of '*' allows for any tool.
 // There is extra handling when the first argument is the binary name itself:
 // For such cases that argument is silbently shifted out and execution continues.
+// A first argument naming a command registered with [AutoRegister], or one of
+// its aliases, is never executed as a tool: a host may well have a tool of the
+// same name in $PATH (RHEL ships /usr/bin/setup), and the command is what the
+// user asked for.
 //
 // Example usage:
 //   - fx.Invoke(stdfx.ContainerEntrypoint())
@@ -45,16 +52,23 @@ var ContainerEntrypointDefaultTools = []string{"sh", "/bin/sh", "bash", "/bin/ba
 //   - docker run --rm -it ghcr.io/choopm/myproject:latest bash -i
 //   - docker run --rm -it ghcr.io/choopm/myproject:latest whoami
 //   - docker run --rm -it ghcr.io/choopm/myproject:latest myproject -c ...
-func ContainerEntrypoint(tools ...string) func() {
+func ContainerEntrypoint(tools ...string) func(entrypointParams) {
 	// use default tools if nothing was provided
 	if len(tools) == 0 {
 		tools = ContainerEntrypointDefaultTools
 	}
 
 	// return constructor
-	return func() {
+	return func(p entrypointParams) {
 		if len(os.Args) < 2 {
 			// only care when atleast one argument was given to cli
+			return
+		}
+
+		// a registered command takes precedence over a tool of the same name
+		if slices.ContainsFunc(p.Commands, func(cmd *cobra.Command) bool {
+			return cmd.Name() == os.Args[1] || cmd.HasAlias(os.Args[1])
+		}) {
 			return
 		}
 
@@ -82,4 +96,12 @@ func ContainerEntrypoint(tools ...string) func() {
 			}
 		}
 	}
+}
+
+// entrypointParams are the dependencies of [ContainerEntrypoint]
+type entrypointParams struct {
+	fx.In
+
+	// Commands are the commands registered using [AutoRegister]
+	Commands []*cobra.Command `group:"commands"`
 }
