@@ -21,9 +21,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strings"
 	"syscall"
 
+	"github.com/choopm/stdfx/globals"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"go.uber.org/fx"
 )
 
@@ -41,6 +44,13 @@ var ContainerEntrypointDefaultTools = []string{"sh", "/bin/sh", "bash", "/bin/ba
 // its aliases, is never executed as a tool: a host may well have a tool of the
 // same name in $PATH (RHEL ships /usr/bin/setup), and the command is what the
 // user asked for.
+//
+// The first argument is the first one following the root flags given ahead of
+// it, as an image entrypoint `myproject -c /etc/myproject` gives them: they are
+// skipped to find it, kept when the binary name is shifted out, and dropped when
+// a tool runs, as they belong to the binary. A flag of [globals.RootFlags]
+// takes the argument following it as its value unless it is boolean or given
+// as --flag=value; any other flag is taken to have no value.
 //
 // Example usage:
 //   - fx.Invoke(stdfx.ContainerEntrypoint())
@@ -60,14 +70,17 @@ func ContainerEntrypoint(tools ...string) func(entrypointParams) {
 
 	// return constructor
 	return func(p entrypointParams) {
-		if len(os.Args) < 2 {
+		// the first argument, following the root flags given ahead of it
+		first := 1 + leadingFlags(os.Args[1:])
+		if first >= len(os.Args) {
 			// only care when atleast one argument was given to cli
 			return
 		}
+		arg := os.Args[first]
 
 		// a registered command takes precedence over a tool of the same name
 		if slices.ContainsFunc(p.Commands, func(cmd *cobra.Command) bool {
-			return cmd.Name() == os.Args[1] || cmd.HasAlias(os.Args[1])
+			return cmd.Name() == arg || cmd.HasAlias(arg)
 		}) {
 			return
 		}
@@ -76,13 +89,14 @@ func ContainerEntrypoint(tools ...string) func(entrypointParams) {
 
 		// container image argument handling
 		switch {
-		case os.Args[1] == filepath.Base(os.Args[0]):
-			// First argument is the same as binary name -> remove it, continue
-			os.Args = append(os.Args[0:0], os.Args[1:]...)
+		case arg == filepath.Base(os.Args[0]):
+			// First argument is the same as binary name -> remove it, keeping
+			// the flags ahead of it, continue
+			os.Args = slices.Delete(os.Args, first, first+1)
 
-		case wildcardTool || slices.Contains(tools, os.Args[1]):
+		case wildcardTool || slices.Contains(tools, arg):
 			// Chain to the first argument given by looking it up in $PATH.
-			path, err := exec.LookPath(os.Args[1])
+			path, err := exec.LookPath(arg)
 			if err != nil && wildcardTool {
 				// wildcard tool is allowed, so the failing lookup might be
 				// caused by first argument not being any tool, continue
@@ -90,12 +104,45 @@ func ContainerEntrypoint(tools ...string) func(entrypointParams) {
 			} else if err != nil {
 				panic(err)
 			}
-			err = syscall.Exec(path, os.Args[1:], syscall.Environ())
+			// the flags ahead of it are the binary's, never the tool's
+			err = syscall.Exec(path, os.Args[first:], syscall.Environ())
 			if err != nil {
 				panic(err)
 			}
 		}
 	}
+}
+
+// leadingFlags returns how many of args are root flags and their values given
+// ahead of the first argument which is neither, see [ContainerEntrypoint].
+func leadingFlags(args []string) int {
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+		if arg == "-" || arg == "--" || !strings.HasPrefix(arg, "-") {
+			return i
+		}
+		i++
+
+		// --flag=value and -fvalue carry their value in the same argument
+		if strings.Contains(arg, "=") || (!strings.HasPrefix(arg, "--") && len(arg) > 2) {
+			continue
+		}
+
+		var flag *pflag.Flag
+		if name, long := strings.CutPrefix(arg, "--"); long {
+			flag = globals.RootFlags.Lookup(name)
+		} else {
+			flag = globals.RootFlags.ShorthandLookup(arg[1:])
+		}
+
+		// a boolean flag has a value to fall back to when given without one
+		if flag != nil && flag.NoOptDefVal == "" && i < len(args) {
+			i++
+		}
+	}
+
+	return i
 }
 
 // entrypointParams are the dependencies of [ContainerEntrypoint]
