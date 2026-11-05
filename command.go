@@ -124,8 +124,13 @@ func Commander(
 
 	lc.Append(fx.Hook{
 		OnStart: func(_ context.Context) error {
+			// closed once the *cobra.Command returned, see the select below
+			done := make(chan struct{})
+
 			// start the *cobra.Command using the errgroup and its ctx
 			g.Go(func() error {
+				defer close(done)
+
 				// check if program invocation name (os.Args[0]) is a subcommand:
 				// That subcommand should be run directly. Therefore we rebuild
 				// the args to fake that the user directly called that command.
@@ -169,9 +174,16 @@ func Commander(
 			})
 
 			// wait up to startBackoff for any error to be captured in ctx
-			// otherwise the goroutine is considered up and running
+			// otherwise the goroutine is considered up and running.
+			// A command which returned already has nothing left to fail, so
+			// its result is final and the wait ends with it: only a command
+			// still running is held to the time frame. Where an error and
+			// done are ready at once, both cases return the same result.
 			select {
 			case <-ctx.Done():
+				return g.Wait()
+
+			case <-done:
 				return g.Wait()
 
 			case <-time.After(startBackoff):
