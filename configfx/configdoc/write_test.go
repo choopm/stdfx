@@ -55,6 +55,48 @@ func TestWriteFile(t *testing.T) {
 	assert.Len(t, entries, 3)
 }
 
+func TestWriteFileKeepsTheOriginalWhereOriginalPathSays(t *testing.T) {
+	defaultPath := configdoc.OriginalPath
+	t.Cleanup(func() { configdoc.OriginalPath = defaultPath })
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "app.yaml")
+	elsewhere := filepath.Join(t.TempDir(), "app.yaml.orig")
+	configdoc.OriginalPath = func(string) string { return elsewhere }
+
+	require.NoError(t, configdoc.WriteFile(path, []byte("first\n")))
+	require.NoError(t, configdoc.WriteFile(path, []byte("second\n")))
+	assertFile(t, elsewhere, "first\n", 0o640)
+	assert.NoFileExists(t, path+configdoc.OriginalSuffix)
+
+	// none is kept where it names nothing
+	configdoc.OriginalPath = func(string) string { return "" }
+	other := filepath.Join(dir, "other.yaml")
+	require.NoError(t, configdoc.WriteFile(other, []byte("first\n")))
+	require.NoError(t, configdoc.WriteFile(other, []byte("second\n")))
+	assertFile(t, other+configdoc.BackupSuffix, "first\n", 0o640)
+	assert.NoFileExists(t, other+configdoc.OriginalSuffix)
+}
+
+func TestWriteFileBackup(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "app.yaml")
+	backup := filepath.Join(t.TempDir(), "app.yaml.saved")
+
+	require.NoError(t, configdoc.WriteFileBackup(path, []byte("first\n"), backup))
+	assert.NoFileExists(t, backup, "a new file has nothing to keep")
+
+	require.NoError(t, configdoc.WriteFileBackup(path, []byte("second\n"), backup))
+	assertFile(t, backup, "first\n", 0o640)
+	assert.NoFileExists(t, path+configdoc.BackupSuffix)
+
+	// none is kept where backup is empty
+	require.NoError(t, configdoc.WriteFileBackup(path, []byte("third\n"), ""))
+	assertFile(t, path, "third\n", 0o640)
+	assertFile(t, backup, "first\n", 0o640)
+	assert.NoFileExists(t, path+configdoc.BackupSuffix)
+}
+
 func TestWriteFileRefusesAMissingDirectory(t *testing.T) {
 	err := configdoc.WriteFile(filepath.Join(t.TempDir(), "missing", "app.yaml"), []byte("x"))
 	assert.Error(t, err)

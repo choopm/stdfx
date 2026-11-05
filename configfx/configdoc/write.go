@@ -39,6 +39,18 @@ const (
 	newFileMode fs.FileMode = 0o640
 )
 
+// OriginalPath returns where [WriteFile] keeps the copy of the file at path as
+// it was before it was first written, or nothing to keep no such copy. It
+// keeps it beside the file, as path+[OriginalSuffix].
+//
+// An application whose original is kept elsewhere replaces it once while it
+// starts, before anything writes a file: one installed by a package which
+// ships its example configuration below /usr/share has the original there
+// already, and keeps none.
+var OriginalPath = func(path string) string {
+	return path + OriginalSuffix
+}
+
 // WriteFile replaces the file at path by data, or returns error.
 //
 // The file is replaced as a whole or not at all: data goes into a temporary
@@ -49,8 +61,16 @@ const (
 // container is, is written in place instead.
 //
 // What the file held before is kept as path+[BackupSuffix], and the first
-// time it is written also as path+[OriginalSuffix].
+// time it is written also where [OriginalPath] says.
 func WriteFile(path string, data []byte) error {
+	return WriteFileBackup(path, data, path+BackupSuffix)
+}
+
+// WriteFileBackup replaces the file at path by data as [WriteFile] does, and
+// keeps what it held before at backup, or nowhere where backup is empty, or
+// returns error. An application asking its operator where to keep the backup
+// passes the answer here.
+func WriteFileBackup(path string, data []byte, backup string) error {
 	info, err := os.Stat(path)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("write config: %w", err)
@@ -61,13 +81,17 @@ func WriteFile(path string, data []byte) error {
 		if err != nil {
 			return fmt.Errorf("write config: %w", err)
 		}
-		if _, err := os.Stat(path + OriginalSuffix); errors.Is(err, fs.ErrNotExist) {
-			if err := replace(path+OriginalSuffix, old, info); err != nil {
-				return err
+		if original := OriginalPath(path); original != "" {
+			if _, err := os.Stat(original); errors.Is(err, fs.ErrNotExist) {
+				if err := replace(original, old, info); err != nil {
+					return err
+				}
 			}
 		}
-		if err := replace(path+BackupSuffix, old, info); err != nil {
-			return err
+		if backup != "" {
+			if err := replace(backup, old, info); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -104,7 +128,7 @@ func replace(path string, data []byte, like fs.FileInfo) (err error) {
 	group := like
 	if group == nil {
 		// a new file belongs to the group of its directory, which is who
-		// reads it - a service user, as root:julia of /opt/julia/etc says
+		// reads it - a service user, as root:julia of /etc/julia says
 		if dirInfo, err := os.Stat(dir); err == nil {
 			group = dirInfo
 		}
